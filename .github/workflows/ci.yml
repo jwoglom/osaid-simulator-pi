@@ -11,6 +11,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: admin/go.mod
+          cache-dependency-path: admin/go.sum
       - run: cd admin && gofmt -l . && go vet ./... && go test ./...
       - run: cd admin && GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=0 go build -o /dev/null .
       - name: Shell syntax

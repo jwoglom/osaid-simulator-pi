@@ -25,6 +25,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: admin/go.mod
+          cache-dependency-path: admin/go.sum
       - uses: actions/setup-node@v4
         with:
           node-version: 20   # builds the Omnipod 5 simulator's embedded React panel
@@ -108,6 +109,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: admin/go.mod
+          cache-dependency-path: admin/go.sum
       - run: cd admin && go test ./... && GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${{ github.ref_name }}" -o osaid-admin .
       - uses: actions/upload-artifact@v4
         with:
