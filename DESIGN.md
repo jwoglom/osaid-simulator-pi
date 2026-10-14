@@ -385,6 +385,14 @@ toolchain, JDK and the admin binary itself change only by reflashing (an
   cache inside the chroot. Uploads `osaid-simulator-<ver>.img.xz` to a Release. Flash
   with Raspberry Pi Imager with OS customisation turned off.
 - `ci.yml`: gofmt, vet, tests, ARMv6 cross-build, shell syntax, on every push.
+- **Caching.** `build.sh` bind-mounts `image/cache` into the pi-gen container as
+  `/osaid-cache`. The stage's `03-run.sh` saves the stage-2 (Lite) rootfs there as a
+  tarball with numeric ids, xattrs and ACLs, plus the warmed Go build cache. When the
+  base tarball exists, `build.sh` marks stages 0-2 `SKIP` and the stage's `prerun.sh`
+  restores it as the previous rootfs, so a rebuild is our stage plus the export. CI
+  stores the same tarballs with `actions/cache`, keyed on the pi-gen ref and
+  `image/config` (base) and `image/versions.json` (Go cache, prebuilt simulators,
+  downloads); the base is saved even if a later step fails.
 
 ## Repo layout
 

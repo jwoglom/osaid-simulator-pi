@@ -79,8 +79,14 @@ Zero W; the Zero 2 W is recommended for it.
 make dev        # admin in mock mode on http://127.0.0.1:8080/ (no systemd; builds run locally)
 make test
 make push       # cross-compile the admin and hot-replace it on a connected Pi
-make image      # prebuild + pi-gen in Docker (slow; CI does this on tags)
+make image      # prebuild + pi-gen in Docker (slow the first time; CI does this on tags)
 ```
+
+Image builds cache under `image/cache/`: the Lite base rootfs from pi-gen's stages
+0 to 2 and the warmed Go build cache. Later builds skip those stages and only run the
+OSAID stage and the image export. CI keeps the same tarballs in the Actions cache,
+keyed on the pi-gen ref, `image/config` and `image/versions.json`. Delete
+`image/cache/` (or bump `CACHE_VERSION` in the workflow) to force a full rebuild.
 
 See [DESIGN.md](DESIGN.md) for the architecture and the reasoning behind it.
 Upstream commits and tool versions baked into the image are pinned in

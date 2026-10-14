@@ -6,12 +6,15 @@ on:
   workflow_dispatch:
     inputs:
       warm_gocache:
-        description: "Warm the Go build cache inside the image (slow under qemu, faster first build on the Pi)"
+        description: "Warm the Go build cache inside the image (slow under qemu the first time; cached afterwards)"
         type: boolean
         default: true
 
 permissions:
   contents: write
+
+env:
+  CACHE_VERSION: 1   # bump to discard every cache below
 
 jobs:
   image:
@@ -27,11 +30,36 @@ jobs:
           node-version: 20   # builds the Omnipod 5 simulator's embedded React panel
       - name: Admin unit tests
         run: cd admin && go test ./...
-      - name: Cache downloads
-        uses: actions/cache@v4
+
+      - name: Cache keys
+        id: keys
+        run: |
+          echo "pigen=$(python3 -c "import json; print(json.load(open('image/versions.json'))['pi_gen']['ref'])")" >> "$GITHUB_OUTPUT"
+          echo "base=base-rootfs-v${CACHE_VERSION}-$(python3 -c "import json; print(json.load(open('image/versions.json'))['pi_gen']['ref'][:12])")-${{ hashFiles('image/config') }}" >> "$GITHUB_OUTPUT"
+      # Toolchain/JDK/jar downloads: keyed on the pins.
+      - uses: actions/cache@v4
         with:
           path: image/stage-osaid/00-install/files/downloads
-          key: downloads-${{ hashFiles('image/versions.json') }}
+          key: downloads-v${{ env.CACHE_VERSION }}-${{ hashFiles('image/versions.json') }}
+      # Cross-compiled simulators: prebuild.sh reuses any whose pinned commit is unchanged.
+      - uses: actions/cache@v4
+        with:
+          path: image/stage-osaid/00-install/files/prebuilt/sims
+          key: prebuilt-v${{ env.CACHE_VERSION }}-${{ hashFiles('image/versions.json') }}
+          restore-keys: prebuilt-v${{ env.CACHE_VERSION }}-
+      # Lite base rootfs (pi-gen stages 0-2, the slow part): exact key only.
+      - uses: actions/cache/restore@v4
+        id: base
+        with:
+          path: image/cache/base-rootfs.tar.gz
+          key: ${{ steps.keys.outputs.base }}
+      # Warmed Go build cache: content-addressed, so a stale one is still useful.
+      - uses: actions/cache/restore@v4
+        with:
+          path: image/cache/gocache.tar.gz
+          key: gocache-v${{ env.CACHE_VERSION }}-${{ hashFiles('image/versions.json') }}
+          restore-keys: gocache-v${{ env.CACHE_VERSION }}-
+
       - name: Prebuild (toolchain, JDK, jar, cross-compiled simulators, admin)
         run: image/prebuild.sh
         env:
@@ -45,6 +73,19 @@ jobs:
         run: image/build.sh
         env:
           OSAID_WARM_GOCACHE: ${{ (github.event_name == 'workflow_dispatch' && inputs.warm_gocache == false) && '0' || '1' }}
+
+      # Save caches even when a later step failed: the base alone is most of the time.
+      - uses: actions/cache/save@v4
+        if: always() && steps.base.outputs.cache-hit != 'true' && hashFiles('image/cache/base-rootfs.tar.gz') != ''
+        with:
+          path: image/cache/base-rootfs.tar.gz
+          key: ${{ steps.keys.outputs.base }}
+      - uses: actions/cache/save@v4
+        if: always() && hashFiles('image/cache/gocache.tar.gz') != ''
+        with:
+          path: image/cache/gocache.tar.gz
+          key: gocache-v${{ env.CACHE_VERSION }}-${{ hashFiles('image/versions.json') }}
+
       - name: Checksums
         run: cd image/deploy && sha256sum * | tee SHA256SUMS
       - uses: actions/upload-artifact@v4

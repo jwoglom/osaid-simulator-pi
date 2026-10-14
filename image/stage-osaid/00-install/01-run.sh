@@ -41,6 +41,14 @@ rm -rf "${OPT:?}/jdk/jmods" "${OPT:?}/jdk/lib/src.zip" "${OPT:?}/jdk/demo" "${OP
 cp "$V" "$OPT/versions.json"
 echo "${OSAID_WARM_GOCACHE:-1}" > "$OPT/.warm-gocache"
 
+# Go build cache from a previous build (see 03-run.sh): makes the cache warming in
+# 02-run-chroot.sh a no-op and the first on-device build fast.
+if [ -n "${OSAID_CACHE:-}" ] && [ -f "${OSAID_CACHE}/gocache.tar.gz" ]; then
+	echo "restoring Go build cache"
+	install -d "${ROOTFS_DIR}/var/lib/osaid"
+	tar -xf "${OSAID_CACHE}/gocache.tar.gz" -C "${ROOTFS_DIR}/var/lib/osaid" --use-compress-program=pigz
+fi
+
 # seed simulator builds so the image works before any upload
 STATE="${ROOTFS_DIR}/var/lib/osaid"
 for dir in "$F"/prebuilt/sims/*/; do
