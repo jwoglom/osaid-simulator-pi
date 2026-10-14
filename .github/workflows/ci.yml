@@ -1,0 +1,19 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  admin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: admin/go.mod
+      - run: cd admin && gofmt -l . && go vet ./... && go test ./...
+      - run: cd admin && GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=0 go build -o /dev/null .
+      - name: Shell syntax
+        run: |
+          bash -n image/prebuild.sh image/build.sh image/stage-osaid/00-install/01-run.sh image/stage-osaid/00-install/02-run-chroot.sh
+          sh -n image/stage-osaid/00-install/files/usr/local/sbin/osaid-gadget

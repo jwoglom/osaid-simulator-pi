@@ -1,0 +1,70 @@
+#!/bin/sh
+# Brings up the USB gadget that makes the Pi appear as a network adapter on the
+# laptop, then gives usb0 its fixed address. Idempotent.
+#
+#   config 1: CDC NCM   - macOS, Linux, Windows 11 (no driver needed)
+#   config 2: RNDIS     - Windows 10 (picked by Windows when RNDIS_OS_DESC=1)
+#
+# Optional overrides in /boot/firmware/osaid-gadget.conf:
+#   RNDIS_OS_DESC=1   advertise Microsoft OS descriptors so Windows 10 selects RNDIS
+#   ADDRESS=10.55.0.1/24
+set -e
+ADDRESS=10.55.0.1/24
+RNDIS_OS_DESC=0
+[ -f /boot/firmware/osaid-gadget.conf ] && . /boot/firmware/osaid-gadget.conf
+
+modprobe libcomposite
+G=/sys/kernel/config/usb_gadget/osaid
+if [ ! -d "$G" ]; then
+	mkdir -p "$G"; cd "$G"
+	echo 0x1d6b > idVendor      # Linux Foundation
+	echo 0x0104 > idProduct     # Multifunction composite gadget
+	echo 0x0100 > bcdDevice
+	echo 0x0200 > bcdUSB
+	echo 0xEF > bDeviceClass; echo 0x02 > bDeviceSubClass; echo 0x01 > bDeviceProtocol
+	serial=$(awk '/Serial/{print $3}' /proc/cpuinfo | tail -c 9)
+	[ -n "$serial" ] || serial=00000000
+	mkdir -p strings/0x409
+	echo "$serial" > strings/0x409/serialnumber
+	echo "Nightscout Foundation" > strings/0x409/manufacturer
+	echo "OSAID Simulator Pi" > strings/0x409/product
+	# Stable, locally administered MACs derived from the CPU serial: the laptop
+	# sees the same adapter every time this Pi is plugged in.
+	h=$(printf '%s' "$serial" | sha1sum | cut -c1-8 | sed 's/\(..\)\(..\)\(..\)\(..\)/\1:\2:\3:\4/')
+	dev="02:$h"
+	host="06:$h"
+
+	mkdir -p configs/c.1/strings/0x409
+	echo "NCM" > configs/c.1/strings/0x409/configuration
+	echo 250 > configs/c.1/MaxPower
+	mkdir -p functions/ncm.usb0
+	echo "$dev" > functions/ncm.usb0/dev_addr
+	echo "$host" > functions/ncm.usb0/host_addr
+	ln -sf functions/ncm.usb0 configs/c.1/
+
+	mkdir -p configs/c.2/strings/0x409
+	echo "RNDIS" > configs/c.2/strings/0x409/configuration
+	echo 250 > configs/c.2/MaxPower
+	mkdir -p functions/rndis.usb0
+	echo "$dev" > functions/rndis.usb0/dev_addr
+	echo "$host" > functions/rndis.usb0/host_addr
+	ln -sf functions/rndis.usb0 configs/c.2/
+	if [ "$RNDIS_OS_DESC" = 1 ]; then
+		echo 1 > os_desc/use
+		echo 0xcd > os_desc/b_vendor_code
+		echo MSFT100 > os_desc/qw_sign
+		echo RNDIS > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
+		echo 5162001 > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
+		ln -sf configs/c.2 os_desc
+	fi
+
+	udc=$(ls /sys/class/udc | head -n1)
+	[ -n "$udc" ] || { echo "no UDC: is dtoverlay=dwc2 in config.txt?" >&2; exit 1; }
+	echo "$udc" > UDC
+fi
+
+# Address usb0 ourselves; NetworkManager is told to leave gadget interfaces alone.
+for i in $(seq 1 50); do [ -d /sys/class/net/usb0 ] && break; sleep 0.1; done
+ip link set usb0 up
+ip addr replace "$ADDRESS" dev usb0
+echo "osaid-gadget: usb0 is $ADDRESS"

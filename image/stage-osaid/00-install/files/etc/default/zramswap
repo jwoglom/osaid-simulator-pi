@@ -1,0 +1,3 @@
+# Compressed swap in RAM for on-device Go builds (512 MB boards).
+ALGO=lz4
+PERCENT=50

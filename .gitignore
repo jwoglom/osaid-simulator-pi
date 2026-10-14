@@ -1,0 +1,12 @@
+# build outputs
+/admin/osaid-admin
+/admin/osaid-admin-*
+/dist/
+/image/pi-gen/
+/image/work/
+/image/deploy/
+/image/stage-osaid/00-install/files/prebuilt/
+/image/stage-osaid/00-install/files/downloads/
+/dev-state/
+/dev-config.yaml
+.DS_Store

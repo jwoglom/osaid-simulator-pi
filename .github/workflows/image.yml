@@ -1,0 +1,74 @@
+name: image
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      warm_gocache:
+        description: "Warm the Go build cache inside the image (slow under qemu, faster first build on the Pi)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: admin/go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20   # builds the Omnipod 5 simulator's embedded React panel
+      - name: Admin unit tests
+        run: cd admin && go test ./...
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: image/stage-osaid/00-install/files/downloads
+          key: downloads-${{ hashFiles('image/versions.json') }}
+      - name: Prebuild (toolchain, JDK, jar, cross-compiled simulators, admin)
+        run: image/prebuild.sh
+        env:
+          OSAID_VERSION: ${{ github.ref_name }}
+      - name: Host prerequisites for pi-gen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static binfmt-support
+          docker --version
+      - name: Build image with pi-gen (Docker)
+        run: image/build.sh
+        env:
+          OSAID_WARM_GOCACHE: ${{ (github.event_name == 'workflow_dispatch' && inputs.warm_gocache == false) && '0' || '1' }}
+      - name: Checksums
+        run: cd image/deploy && sha256sum * | tee SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: osaid-simulator-image
+          path: image/deploy/*
+          retention-days: 14
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: image/deploy/*
+          generate_release_notes: true
+
+  admin-only:
+    # Fast path: cross-compile the admin for the "Upload osaid-admin" button.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: admin/go.mod
+      - run: cd admin && go test ./... && GOOS=linux GOARCH=arm GOARM=6 CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${{ github.ref_name }}" -o osaid-admin .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: osaid-admin-armv6
+          path: admin/osaid-admin

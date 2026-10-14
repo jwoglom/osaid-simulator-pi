@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OSAID Simulator Pi</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>OSAID Simulator Pi</h1>
+  <div id="sysline" class="muted">connecting…</div>
+</header>
+
+<main>
+  <section id="sims"></section>
+
+  <section class="grid">
+    <div class="card" id="wifi-card">
+      <h2>Wi-Fi uplink <span class="muted">(optional)</span></h2>
+      <p class="muted small">Lets the Pi itself reach the internet, for fetching sources, NTP or apt. The laptop's connection is never touched.</p>
+      <form id="wifi-form" class="form">
+        <label><input type="checkbox" name="enabled"> Enabled</label>
+        <label>SSID <input name="ssid" autocomplete="off"></label>
+        <label>Password <input name="psk" type="password" autocomplete="off"></label>
+        <label>Country <input name="country" size="3" maxlength="2" placeholder="US"></label>
+        <div class="row"><button type="submit">Apply</button> <span id="wifi-status" class="muted"></span></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>System</h2>
+      <dl id="sysinfo" class="kv"></dl>
+      <div class="row">
+        <button data-sys="reboot" class="warn">Reboot</button>
+        <button data-sys="poweroff" class="warn">Shut down</button>
+      </div>
+      <details>
+        <summary>Replace pumpX2 jar / admin binary</summary>
+        <form id="jar-form" class="row"><input type="file" name="jar" accept=".jar"><button>Upload jar</button></form>
+        <form id="admin-form" class="row"><input type="file" name="binary"><button>Upload osaid-admin</button></form>
+      </details>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Configuration <span class="muted small" id="cfgpath"></span></h2>
+    <p class="muted small">The simulator list, build rules, exec lines and ports. Saving re-renders the systemd units. Add a new simulator by appending an entry.</p>
+    <textarea id="config" spellcheck="false"></textarea>
+    <div class="row">
+      <button id="cfg-save">Save &amp; apply</button>
+      <button id="cfg-reload" class="secondary">Reload</button>
+      <button id="cfg-template" class="secondary">Insert simulator template</button>
+      <span id="cfg-msg" class="muted"></span>
+    </div>
+  </section>
+</main>
+
+<template id="sim-tpl">
+  <div class="card sim">
+    <div class="simhead">
+      <h2><span class="title"></span> <span class="badge"></span></h2>
+      <div class="muted small meta"></div>
+    </div>
+    <div class="row controls">
+      <button data-act="start">Start</button>
+      <button data-act="stop" class="secondary">Stop</button>
+      <button data-act="restart" class="secondary">Restart</button>
+      <button data-act="kill" class="warn">Force kill</button>
+      <a class="uilink" target="_blank">Open control panel ↗</a>
+    </div>
+    <form class="flags row">
+      <label>Flags <input name="flags" class="mono"></label>
+      <button>Save</button>
+      <label class="small"><input type="checkbox" name="restart" checked> restart if running</label>
+    </form>
+    <details class="logs"><summary>Log</summary><pre class="log"></pre></details>
+    <details class="builds">
+      <summary>Builds &amp; updates</summary>
+      <div class="update">
+        <label class="drop">
+          <input type="file" accept=".zip" class="zip">
+          <span>Drop the repository's <b>Code → Download ZIP</b> here (or click), and it is built on the Pi.</span>
+        </label>
+        <form class="fetch row hidden">
+          <label>Fetch from GitHub: <span class="repo mono"></span> @ <input name="ref" class="mono" size="12"></label>
+          <button>Fetch &amp; build</button>
+        </form>
+        <div class="buildmsg muted small"></div>
+        <pre class="buildlog hidden"></pre>
+      </div>
+      <table class="buildlist"><tbody></tbody></table>
+    </details>
+  </div>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>

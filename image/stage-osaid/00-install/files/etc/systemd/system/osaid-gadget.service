@@ -1,0 +1,14 @@
+[Unit]
+Description=OSAID USB network gadget (usb0)
+DefaultDependencies=no
+After=sys-kernel-config.mount systemd-modules-load.service
+Before=network-pre.target dnsmasq.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/osaid-gadget
+
+[Install]
+WantedBy=sysinit.target

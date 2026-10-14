@@ -1,0 +1,23 @@
+[Unit]
+Description=OSAID admin console (http://10.55.0.1/)
+After=local-fs.target osaid-gadget.service network.target
+Wants=osaid-gadget.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=notify
+ExecStart=/opt/osaid/admin/osaid-admin
+Environment=OSAID_CONFIG=/boot/firmware/osaid.yaml
+Restart=always
+RestartSec=1
+WatchdogSec=30
+# Never the OOM victim: a stuck build or runaway simulator dies first.
+OOMScoreAdjust=-1000
+MemoryMin=64M
+MemoryLow=96M
+Nice=-10
+CPUWeight=1000
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

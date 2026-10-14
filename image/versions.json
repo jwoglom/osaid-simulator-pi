@@ -1,0 +1,24 @@
+{
+  "_comment": "Pinned inputs of the image. Bump commits here to ship newer simulators; users can also upload any repo zip from the admin UI.",
+  "pi_gen": { "repo": "RPi-Distro/pi-gen", "ref": "59b67461533c2eef3564bc48eb3ce5c16e5c62ee" },
+  "go": {
+    "version": "go1.27.2",
+    "url": "https://go.dev/dl/go1.27.2.linux-armv6l.tar.gz",
+    "sha256": "e25a174051d8675f87ac720aedcd25bf89ac652c4b82f26aa47919524725ed95"
+  },
+  "jdk": {
+    "url": "https://github.com/JsBergbau/OpenJDK-Raspberry-Pi-Zero-W-armv6/releases/download/jdk-17-ga_gcc-10.1_glibc-2.28_binutils-2.31_Buster/jdk-17-ga_gcc-10.1_glibc-2.28_binutils-2.31_Buster.tar.gz",
+    "sha256": "2294d145979a2dbc06bc97552a91983c3708cbf79bdcf99302122d09a3c0afd4",
+    "topdir": "jdk-17-ga"
+  },
+  "pumpx2_jar": {
+    "url": "https://jitpack.io/com/github/jwoglom/pumpX2/pumpx2-cliparser/v1.9.2/pumpx2-cliparser-v1.9.2.jar",
+    "sha256": "07a18403c30cda7bb5b4763ea881a36781a966b1ef3e280d57e564ff0e3a99a1"
+  },
+  "simulators": {
+    "g7sim":      { "repo": "LoopKit/g7sim",      "commit": "7c039de53831683ccb0461cb0f5ca9c38cef0407", "output": "g7sim" },
+    "pod-dash":   { "repo": "LoopKit/pod",        "commit": "a491a5ea7171b629490ea5b98381354c72ccc31c", "output": "pod" },
+    "pod-five":   { "repo": "jwoglom/pod",        "commit": "9c6df7fb1fc32693752418d058969ada8c96ac35", "output": "pod", "ref": "five", "frontend": "frontend" },
+    "faketandem": { "repo": "jwoglom/faketandem", "commit": "4852c42defcbc6042f21fd83e8bcf4f65a741e02", "output": "faketandem" }
+  }
+}

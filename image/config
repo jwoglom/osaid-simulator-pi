@@ -1,0 +1,20 @@
+# pi-gen configuration for the OSAID simulator image.
+# Built by image/build.sh (locally with Docker) or .github/workflows/image.yml.
+IMG_NAME=osaid-simulator
+RELEASE=trixie
+DEPLOY_COMPRESSION=xz
+COMPRESSION_LEVEL=6
+TARGET_HOSTNAME=osaid
+FIRST_USER_NAME=pi
+FIRST_USER_PASS=raspberry
+DISABLE_FIRST_BOOT_USER_RENAME=1
+ENABLE_SSH=1
+PASSWORDLESS_SUDO=1
+LOCALE_DEFAULT=en_US.UTF-8
+KEYBOARD_KEYMAP=us
+KEYBOARD_LAYOUT="English (US)"
+TIMEZONE_DEFAULT=UTC
+WPA_COUNTRY=US
+ENABLE_CLOUD_INIT=0
+# Lite = stage0..2, then ours. stage2's own image export is skipped by build.sh.
+STAGE_LIST="stage0 stage1 stage2 stage-osaid"
