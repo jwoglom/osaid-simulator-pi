@@ -12,7 +12,7 @@ Simulators carried in the image:
 | g7sim | LoopKit/g7sim | Go | raw HCI on `hci0` |
 | pod-dash | LoopKit/pod | Go | raw HCI on `hci0` |
 | pod-five | jwoglom/pod @ `five` | Go (+ React UI) | raw HCI on `hci0`; web UI fixed at `:8080`; panel embedded only if `frontend/` was built first |
-| faketandem | jwoglom/faketandem | Go + Java | raw HCI on `hci0`, a JRE, `pumpx2-cliparser-1.9.2.jar` |
+| faketandem | jwoglom/faketandem | Go | raw HCI on `hci0`; Java and the pumpX2 jar only for the optional `-message-codec pumpx2`/`compare` modes |
 
 ## Supported hardware: Pi Zero W (gen 1) and Pi Zero 2 W
 
@@ -69,14 +69,18 @@ main ports (the Pi 4 can do it over USB-C power port; not a goal here).
    Each sim unit also runs `rfkill unblock bluetooth` as root before startup:
    masking bluetoothd does not clear a soft block restored by the base OS. The
    simulator continues to run as `osaid` with its raw-HCI capabilities.
-3. **faketandem needs Java.** It shells out to the pumpX2 cliparser jar. The distro JRE
+3. **faketandem no longer needs Java.** Since faketandem ported pumpX2's message library and
+   EC-JPAKE to Go (`-message-codec native`, `-jpake-mode go`, both the defaults), the unit
+   runs without a JVM and the exec line passes no `-java-cmd`/`-pumpx2-jar-path`. The JDK
+   and jar stay in the image so `-message-codec compare|pumpx2` can be set via `${FLAGS}`.
+   For that optional path: the distro JRE
    does not run on the ARMv6 Zero W (`Server VM is only supported on ARMv7+ VFP`). The
    image instead ships the ARMv6hf OpenJDK 17 build from
    [JsBergbau/OpenJDK-Raspberry-Pi-Zero-W-armv6](https://github.com/JsBergbau/OpenJDK-Raspberry-Pi-Zero-W-armv6)
    (`jdk-17-ga`, built against glibc 2.28, so it runs on trixie) at `/opt/osaid/jdk`.
    It runs on both Zero models under the armhf image, so one JRE covers everything.
    Optional trim: `jlink` the armv6 jmods from an x86 JDK 17 in CI to a ~50 MB runtime.
-   The JVM will still be slow on the Zero W; recommend the Zero 2 W for faketandem.
+   The JVM is slow on the Zero W, which no longer matters for the default native mode.
    The pumpX2 cliparser jar (`v1.9.2`, from jitpack) is baked into the image and can be
    replaced from the admin UI if upstream bumps it.
 4. **No RTC, no internet.** g7sim timestamps readings at wall-clock time and the phone
@@ -228,7 +232,7 @@ simulators:
     title: Tandem Mobi (faketandem)
     source: { github: jwoglom/faketandem, ref: main }
     build:  { kind: go, package: ., output: faketandem }
-    exec:   faketandem -api-addr :8083 -ui-dir ${OSAID_BUILD}/ui -java-cmd /opt/osaid/jdk/bin/java -pumpx2-jar-path /opt/osaid/jars/pumpx2-cliparser.jar ${FLAGS}
+    exec:   faketandem -api-addr :8083 -ui-dir ${OSAID_BUILD}/ui ${FLAGS}
     flags:  ""
     ui_port: 8083
     memory_max: 320M

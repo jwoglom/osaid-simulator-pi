@@ -284,7 +284,7 @@ simulators:
     title: Tandem Mobi (faketandem)
     source: { github: jwoglom/faketandem, ref: main }
     build: { kind: go, package: ., output: faketandem }
-    exec: faketandem -api-addr :8083 -ui-dir ${OSAID_BUILD}/ui -java-cmd /opt/osaid/jdk/bin/java -pumpx2-jar-path /opt/osaid/jars/pumpx2-cliparser.jar ${FLAGS}
+    exec: faketandem -api-addr :8083 -ui-dir ${OSAID_BUILD}/ui ${FLAGS}
     flags: ""
     ui_port: 8083
     memory_max: 320M
