@@ -15,7 +15,16 @@ RNDIS_OS_DESC=0
 
 modprobe libcomposite
 G=/sys/kernel/config/usb_gadget/osaid
-if [ ! -d "$G" ]; then
+# A previous failed start may have created the directory without binding it.
+# Only a nonempty UDC attribute means setup has completed successfully.
+if [ ! -d "$G" ] || [ -z "$(cat "$G/UDC")" ]; then
+	# The controller can appear after modules-load.service has finished.
+	for i in $(seq 1 50); do
+		udc=$(ls /sys/class/udc | head -n1)
+		[ -n "$udc" ] && break
+		sleep 0.1
+	done
+	[ -n "$udc" ] || { echo "no UDC: add [all] and dtoverlay=dwc2,dr_mode=peripheral to config.txt and reboot" >&2; exit 1; }
 	mkdir -p "$G"; cd "$G"
 	echo 0x1d6b > idVendor      # Linux Foundation
 	echo 0x0104 > idProduct     # Multifunction composite gadget
@@ -30,7 +39,7 @@ if [ ! -d "$G" ]; then
 	echo "OSAID Simulator Pi" > strings/0x409/product
 	# Stable, locally administered MACs derived from the CPU serial: the laptop
 	# sees the same adapter every time this Pi is plugged in.
-	h=$(printf '%s' "$serial" | sha1sum | cut -c1-8 | sed 's/\(..\)\(..\)\(..\)\(..\)/\1:\2:\3:\4/')
+	h=$(printf '%s' "$serial" | sha1sum | cut -c1-10 | sed 's/\(..\)\(..\)\(..\)\(..\)\(..\)/\1:\2:\3:\4:\5/')
 	dev="02:$h"
 	host="06:$h"
 
@@ -40,7 +49,7 @@ if [ ! -d "$G" ]; then
 	mkdir -p functions/ncm.usb0
 	echo "$dev" > functions/ncm.usb0/dev_addr
 	echo "$host" > functions/ncm.usb0/host_addr
-	ln -sf functions/ncm.usb0 configs/c.1/
+	[ -L configs/c.1/ncm.usb0 ] || ln -s "$G/functions/ncm.usb0" configs/c.1/
 
 	mkdir -p configs/c.2/strings/0x409
 	echo "RNDIS" > configs/c.2/strings/0x409/configuration
@@ -48,18 +57,16 @@ if [ ! -d "$G" ]; then
 	mkdir -p functions/rndis.usb0
 	echo "$dev" > functions/rndis.usb0/dev_addr
 	echo "$host" > functions/rndis.usb0/host_addr
-	ln -sf functions/rndis.usb0 configs/c.2/
+	[ -L configs/c.2/rndis.usb0 ] || ln -s "$G/functions/rndis.usb0" configs/c.2/
 	if [ "$RNDIS_OS_DESC" = 1 ]; then
 		echo 1 > os_desc/use
 		echo 0xcd > os_desc/b_vendor_code
 		echo MSFT100 > os_desc/qw_sign
 		echo RNDIS > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
 		echo 5162001 > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
-		ln -sf configs/c.2 os_desc
+		[ -L os_desc/c.2 ] || ln -s "$G/configs/c.2" os_desc/
 	fi
 
-	udc=$(ls /sys/class/udc | head -n1)
-	[ -n "$udc" ] || { echo "no UDC: is dtoverlay=dwc2 in config.txt?" >&2; exit 1; }
 	echo "$udc" > UDC
 fi
 

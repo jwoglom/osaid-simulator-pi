@@ -18,3 +18,5 @@ jobs:
         run: |
           bash -n image/prebuild.sh image/build.sh image/stage-osaid/00-install/01-run.sh image/stage-osaid/00-install/02-run-chroot.sh
           sh -n image/stage-osaid/00-install/files/usr/local/sbin/osaid-gadget
+      - name: Boot setup regressions
+        run: python3 -m unittest discover -s image/tests -v

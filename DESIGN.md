@@ -41,6 +41,9 @@ What that forces, component by component:
   gains nothing here, and a single artifact is simpler to ship and test.
 - **Boot config:** `dtoverlay=dwc2,dr_mode=peripheral` is valid on both; the firmware
   picks the right kernel and DTB automatically.
+- **GPU memory:** `gpu_mem=16` reserves the minimum firmware memory, returning
+  48 MB to Linux compared with a 64 MB allocation. The HDMI text console remains
+  available; these simulators do not use GPU acceleration or video codecs.
 
 What differs at runtime, handled by the admin at boot (it reads `/proc/device-tree/model`):
 
@@ -111,7 +114,7 @@ main ports (the Pi 4 can do it over USB-C power port; not a goal here).
 
 ```
 stage-osaid/
-  00-packages                 dnsmasq avahi-daemon pi-bluetooth bluez-firmware zram-tools git
+  00-packages                 dnsmasq avahi-daemon pi-bluetooth bluez-firmware rpi-swap rfkill
   01-run.sh                   copies files/, installs Go toolchain + ARMv6 JDK + jar, seeds
                               initial sim checkouts and prebuilt binaries, enables/disables units
   files/
@@ -130,8 +133,9 @@ stage-osaid/
 
 `01-run.sh` also: `systemctl disable bluetooth`; `systemctl mask bluetooth`;
 disable `apt-daily*.timer`, `unattended-upgrades`, `man-db.timer`; `rfkill block wifi`
-by default (opt-in via the YAML or the admin UI, below); enable `zram` swap plus a 1 GB `dphys-swapfile` (needed
-for on-device Go builds on the 512 MB Zero W); place each simulator's pinned source tree
+by default (opt-in via the YAML or the admin UI, below); use Trixie's native
+`rpi-swap`/`systemd-zram-generator` swap management and mask `zramswap.service`
+so two managers cannot reconfigure the same zram device; place each simulator's pinned source tree
 and a CI-prebuilt binary under `/var/lib/osaid/sims/<name>/` so the image works out of
 the box without a first build.
 

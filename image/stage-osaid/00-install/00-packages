@@ -2,5 +2,5 @@ dnsmasq
 avahi-daemon
 pi-bluetooth
 bluez-firmware
-zram-tools
+rpi-swap
 rfkill

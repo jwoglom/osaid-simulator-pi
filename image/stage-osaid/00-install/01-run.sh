@@ -13,15 +13,18 @@ install -m 644 "$F/etc/systemd/system/osaid-admin.service"  "${ROOTFS_DIR}/etc/s
 install -m 644 "$F/etc/dnsmasq.d/osaid-usb0.conf"           "${ROOTFS_DIR}/etc/dnsmasq.d/"
 install -m 644 "$F/etc/NetworkManager/conf.d/osaid.conf"    "${ROOTFS_DIR}/etc/NetworkManager/conf.d/"
 install -m 644 "$F/etc/modules-load.d/osaid.conf"           "${ROOTFS_DIR}/etc/modules-load.d/"
-install -m 644 "$F/etc/default/zramswap"                    "${ROOTFS_DIR}/etc/default/zramswap"
 install -d "${ROOTFS_DIR}/etc/systemd/journald.conf.d"
 install -m 644 "$F/etc/systemd/journald.conf.d/osaid.conf"  "${ROOTFS_DIR}/etc/systemd/journald.conf.d/"
 install -m 644 "$F/boot/osaid-gadget.conf"                  "${ROOTFS_DIR}/boot/firmware/osaid-gadget.conf"
 install -m 644 "$F/prebuilt/admin/osaid.yaml"               "${ROOTFS_DIR}/boot/firmware/osaid.yaml"
 
-# boot config: USB device mode + memory cgroup (MemoryMax= needs it on Pi OS)
+# boot config: USB device mode, minimal GPU memory, memory cgroup
 BOOT="${ROOTFS_DIR}/boot/firmware"
-grep -q '^dtoverlay=dwc2' "$BOOT/config.txt" || printf '\n# OSAID: USB device (gadget) mode on the data port\ndtoverlay=dwc2,dr_mode=peripheral\n' >> "$BOOT/config.txt"
+# The base image has a dwc2 host overlay under [cm5]. It says nothing about
+# Zero boards. Explicitly reset conditional filters before our device overlay.
+# These simulators need no GPU acceleration. 16 MB keeps the text console and
+# returns 48 MB to Linux compared with the usual 64 MB firmware allocation.
+printf '\n# OSAID: USB device (gadget) mode on the data port\n[all]\ndtoverlay=dwc2,dr_mode=peripheral\ngpu_mem=16\n' >> "$BOOT/config.txt"
 if ! grep -q 'cgroup_enable=memory' "$BOOT/cmdline.txt"; then
 	sed '1 s/$/ cgroup_enable=memory cgroup_memory=1 modules-load=dwc2/' "$BOOT/cmdline.txt" > "$BOOT/cmdline.txt.new"
 	mv "$BOOT/cmdline.txt.new" "$BOOT/cmdline.txt"

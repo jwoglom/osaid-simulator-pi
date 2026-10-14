@@ -8,7 +8,10 @@ systemctl disable bluetooth.service || true
 systemctl mask bluetooth.service
 systemctl enable hciuart.service || true
 
-systemctl enable osaid-gadget.service osaid-admin.service dnsmasq.service avahi-daemon.service zramswap.service
+# Trixie's rpi-swap/systemd-zram-generator owns zram. A second manager fails
+# with EBUSY when it tries to change the already active /dev/zram0.
+systemctl mask zramswap.service
+systemctl enable osaid-gadget.service osaid-admin.service dnsmasq.service avahi-daemon.service
 # no internet: these only burn CPU and SD writes
 systemctl disable apt-daily.timer apt-daily-upgrade.timer man-db.timer e2scrub_all.timer 2>/dev/null || true
 systemctl disable ModemManager.service 2>/dev/null || true
@@ -17,11 +20,7 @@ systemctl disable ModemManager.service 2>/dev/null || true
 sed -i 's/^#\?allow-interfaces=.*/allow-interfaces=usb0,wlan0/' /etc/avahi/avahi-daemon.conf
 sed -i 's/^#\?use-ipv6=.*/use-ipv6=no/' /etc/avahi/avahi-daemon.conf
 
-# 1 GB swapfile for on-device Go builds on 512 MB boards (zram is layered on top)
-if [ -f /etc/dphys-swapfile ]; then
-	sed -i 's/^#\?CONF_SWAPSIZE=.*/CONF_SWAPSIZE=1024/' /etc/dphys-swapfile
-	sed -i 's/^#\?CONF_MAXSWAP=.*/CONF_MAXSWAP=2048/' /etc/dphys-swapfile
-fi
+# Keep the native rpi-swap sizing and backing-store policy.
 
 # Warm the Go build cache so the first on-device build does not recompile the
 # standard library on a 1 GHz ARMv6 core. Best effort: slow under qemu.
