@@ -66,6 +66,9 @@ main ports (the Pi 4 can do it over USB-C power port; not a goal here).
    `hci0` and the sims fail with `no supported devices available`. The image disables
    it; each sim unit declares `Conflicts=bluetooth.service`. `hciuart.service`
    (from `pi-bluetooth`) must stay, as it loads the radio firmware and creates `hci0`.
+   Each sim unit also runs `rfkill unblock bluetooth` as root before startup:
+   masking bluetoothd does not clear a soft block restored by the base OS. The
+   simulator continues to run as `osaid` with its raw-HCI capabilities.
 3. **faketandem needs Java.** It shells out to the pumpX2 cliparser jar. The distro JRE
    does not run on the ARMv6 Zero W (`Server VM is only supported on ARMv7+ VFP`). The
    image instead ships the ARMv6hf OpenJDK 17 build from

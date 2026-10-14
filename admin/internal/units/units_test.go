@@ -23,6 +23,7 @@ func TestRenderAndSync(t *testing.T) {
 	for _, want := range []string{
 		"Conflicts=bluetooth.service osaid-sim-faketandem.service osaid-sim-pod-dash.service osaid-sim-pod-five.service",
 		"AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN",
+		"ExecStartPre=+/usr/sbin/rfkill unblock bluetooth",
 		"KillMode=control-group",
 		"MemoryMax=160M",
 		"OOMScoreAdjust=500",

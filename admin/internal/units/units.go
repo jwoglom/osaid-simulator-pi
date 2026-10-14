@@ -42,6 +42,10 @@ func Render(cfg *config.Config, s config.Simulator, p Paths) string {
 	fmt.Fprintf(&b, "After=hciuart.service osaid-admin.service\n")
 	fmt.Fprintf(&b, "StartLimitIntervalSec=60\nStartLimitBurst=10\n\n")
 	fmt.Fprintf(&b, "[Service]\n")
+	// The base OS can restore a soft rfkill block even while bluetoothd is
+	// masked. Unblock the radio before each start; '+' runs this preparation
+	// as root while the simulator itself still runs as its configured user.
+	fmt.Fprintf(&b, "ExecStartPre=+/usr/sbin/rfkill unblock bluetooth\n")
 	if s.User != "root" {
 		fmt.Fprintf(&b, "User=%s\n", s.User)
 	}
