@@ -257,11 +257,13 @@ simulators:
     ui_port: 8081
     exclusive: radio
 
+  # pod exits if its state.toml is missing, so a new pod starts with -fresh.
+  # The file is only written once a phone pairs, keeping that pairing after.
   - name: pod-dash
     title: Omnipod DASH (pod)
     source: { github: LoopKit/pod, ref: main }
     build: { kind: go, package: ., output: pod }
-    exec: pod -api :8082 ${FLAGS}
+    exec: pod -api :8082 $([ -f state.toml ] || echo -fresh) ${FLAGS}
     flags: -q
     ui_port: 8082
     exclusive: radio
@@ -272,7 +274,7 @@ simulators:
     title: Omnipod 5 (pod, branch o5-sim-support)
     source: { github: LoopKit/pod, ref: o5-sim-support }
     build: { kind: go, package: ., output: pod }
-    exec: pod -api :8084 -mode o5 ${FLAGS}
+    exec: pod -api :8084 -mode o5 $([ -f state.toml ] || echo -fresh) ${FLAGS}
     flags: -q
     ui_port: 8084
     exclusive: radio
