@@ -266,18 +266,15 @@ simulators:
     ui_port: 8082
     exclusive: radio
 
-  # jwoglom/pod branch "five": same code base as pod with an Omnipod 5 pairing
-  # mode (-mode o5|dash). Its web UI listens on a fixed :8080. The React control
-  # panel is embedded only when the frontend was built before "go build" (the
-  # image seed has it; a plain GitHub zip built on the Pi serves the WebSocket
-  # API at :8080/ws but no panel).
+  # LoopKit/pod branch "o5-sim-support": pod with an Omnipod 5 mode
+  # (-mode o5|dash). Its control panel is built into the binary, like pod-dash's.
   - name: pod-five
-    title: Omnipod 5 (pod, branch five)
-    source: { github: jwoglom/pod, ref: five }
+    title: Omnipod 5 (pod, branch o5-sim-support)
+    source: { github: LoopKit/pod, ref: o5-sim-support }
     build: { kind: go, package: ., output: pod }
-    exec: pod -mode o5 ${FLAGS}
+    exec: pod -api :8084 -mode o5 ${FLAGS}
     flags: -q
-    ui_port: 8080
+    ui_port: 8084
     exclusive: radio
 
   - name: faketandem

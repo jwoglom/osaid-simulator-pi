@@ -51,7 +51,7 @@ for name in $(python3 -c "import json; print(' '.join(json.load(open('$V'))['sim
   [ -f "$zip" ] || { echo "fetch $repo@$short"; curl -sfL --retry 3 -o "$zip" "https://github.com/$repo/archive/$commit.zip"; }
   work=$(mktemp -d); unzip -q "$zip" -d "$work"
   src=$(find "$work" -mindepth 1 -maxdepth 1 -type d | head -1)
-  # Some simulators embed a web UI that must be built first (pod "five": Vite/React).
+  # A simulator may embed a web UI that must be built first ("frontend" in versions.json).
   fe=$(python3 -c "import json; print(json.load(open('$V'))['simulators']['$name'].get('frontend',''))")
   if [ -n "$fe" ] && [ -f "$src/$fe/package.json" ]; then
     if command -v npm >/dev/null; then

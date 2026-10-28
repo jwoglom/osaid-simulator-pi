@@ -16,9 +16,9 @@
     "sha256": "07a18403c30cda7bb5b4763ea881a36781a966b1ef3e280d57e564ff0e3a99a1"
   },
   "simulators": {
-    "g7sim":      { "repo": "LoopKit/g7sim",      "commit": "7c039de53831683ccb0461cb0f5ca9c38cef0407", "output": "g7sim" },
-    "pod-dash":   { "repo": "LoopKit/pod",        "commit": "a491a5ea7171b629490ea5b98381354c72ccc31c", "output": "pod" },
-    "pod-five":   { "repo": "jwoglom/pod",        "commit": "9c6df7fb1fc32693752418d058969ada8c96ac35", "output": "pod", "ref": "five", "frontend": "frontend" },
-    "faketandem": { "repo": "jwoglom/faketandem", "commit": "913bb5baf8eca43e891c1ba5cfc5d518a428ea0d", "output": "faketandem" }
+    "g7sim":      { "repo": "LoopKit/g7sim",      "commit": "fa26c95f1c2ed9a5e5569a9bb3855e992ab035bb", "output": "g7sim" },
+    "pod-dash":   { "repo": "LoopKit/pod",        "commit": "eb48d87b8a83e32682013fca914593f83ded06fa", "output": "pod" },
+    "pod-five":   { "repo": "LoopKit/pod",        "commit": "6eb3f092fb002b7df8f1a5ecd2a940e601178d5d", "output": "pod", "ref": "o5-sim-support" },
+    "faketandem": { "repo": "jwoglom/faketandem", "commit": "ff11ff8d5b07c12e9acc286c1964b851c8279200", "output": "faketandem" }
   }
 }

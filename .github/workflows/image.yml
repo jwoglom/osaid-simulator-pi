@@ -26,9 +26,6 @@ jobs:
         with:
           go-version-file: admin/go.mod
           cache-dependency-path: admin/go.sum
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20   # builds the Omnipod 5 simulator's embedded React panel
       - name: Admin unit tests
         run: cd admin && go test ./...
 

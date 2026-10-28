@@ -11,7 +11,7 @@ Simulators carried in the image:
 |---|---|---|---|
 | g7sim | LoopKit/g7sim | Go | raw HCI on `hci0` |
 | pod-dash | LoopKit/pod | Go | raw HCI on `hci0` |
-| pod-five | jwoglom/pod @ `five` | Go (+ React UI) | raw HCI on `hci0`; web UI fixed at `:8080`; panel embedded only if `frontend/` was built first |
+| pod-five | LoopKit/pod @ `o5-sim-support` | Go | raw HCI on `hci0` |
 | faketandem | jwoglom/faketandem | Go | raw HCI on `hci0`; Java and the pumpX2 jar only for the optional `-message-codec pumpx2`/`compare` modes |
 
 ## Supported hardware: Pi Zero W (gen 1) and Pi Zero 2 W
@@ -174,8 +174,8 @@ Verify on a Windows machine; macOS and Linux are the straightforward cases.
 - avahi publishes `osaid.local` on `usb0` as a convenience; `10.55.0.1` is the
   documented address.
 - Admin UI on port 80. Sim control panels get distinct ports: g7sim `:8081`, pod-dash
-  `:8082`, faketandem `:8083` (their defaults are all `:8080`, overridden by flag), and
-  pod-five keeps its hardcoded `:8080`.
+  `:8082`, faketandem `:8083`, pod-five `:8084` (their defaults are all `:8080`,
+  overridden by flag).
 
 ### Simulator config on the boot volume: `/boot/firmware/osaid.yaml`
 
@@ -221,12 +221,12 @@ simulators:
     ui_port: 8082
     exclusive: radio
   - name: pod-five
-    title: Omnipod 5 (pod, branch five)
-    source: { github: jwoglom/pod, ref: five }
+    title: Omnipod 5 (pod, branch o5-sim-support)
+    source: { github: LoopKit/pod, ref: o5-sim-support }
     build:  { kind: go, package: ., output: pod }
-    exec:   pod -mode o5 ${FLAGS}                  # :8080 is hardcoded in this branch
+    exec:   pod -api :8084 -mode o5 ${FLAGS}
     flags:  -q
-    ui_port: 8080
+    ui_port: 8084
     exclusive: radio
   - name: faketandem
     title: Tandem Mobi (faketandem)

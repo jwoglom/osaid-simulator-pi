@@ -10,7 +10,7 @@ Bluetooth radio is pretending to be:
 |---|---|---|
 | g7sim | Dexcom G7 / ONE+ / Stelo sensor | [LoopKit/g7sim](https://github.com/LoopKit/g7sim) |
 | pod-dash | Omnipod DASH pod | [LoopKit/pod](https://github.com/LoopKit/pod) |
-| pod-five | Omnipod 5 pod | [jwoglom/pod, branch `five`](https://github.com/jwoglom/pod/tree/five) |
+| pod-five | Omnipod 5 pod | [LoopKit/pod, branch `o5-sim-support`](https://github.com/LoopKit/pod/tree/o5-sim-support) |
 | faketandem | Tandem Mobi pump | [jwoglom/faketandem](https://github.com/jwoglom/faketandem) |
 
 These are development tools for exercising app code. None of them is a medical
@@ -43,11 +43,6 @@ simulator's **Builds & updates** panel. The Pi unpacks and compiles it with its
 bundled Go toolchain, streams the build log, and switches to it on success. Previous
 builds stay for one-click rollback. Expect a few minutes on a Zero 2 W and longer on
 a Zero W; the build runs with a memory cap so it cannot disturb a running simulator.
-
-The Omnipod 5 simulator's control panel is a React app that must be compiled before
-the Go build embeds it. The image ships it; a plain GitHub zip built on the Pi gives
-you the simulator and its WebSocket API on port 8080 but a blank panel. Build the
-`frontend` directory with npm before zipping if you need the panel on an update.
 
 A zip containing `osaid-manifest.json` (`{"name":"g7sim","binary":"g7sim","label":"…"}`)
 plus the binary is installed without compiling.
